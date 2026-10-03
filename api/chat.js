@@ -1,48 +1,53 @@
-// api/chat.js - ANTI HIGH DEMAND
+// api/chat.js - SUPER CEPAT + STREAMING
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY belum di set' });
+  if (req.method!== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { prompt, system } = req.body;
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  };
-  if (system) payload.systemInstruction = { parts: [{ text: system }] };
+  const messages = [];
+  if (system) messages.push({ role: "system", content: system });
+  messages.push({ role: "user", content: prompt });
 
-  const MODELS_TO_TRY = [
-    "gemini-3.8-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash"
-  ];
+  // model paling cepet di Groq
+  const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: "llama-3.1-8b-instant", // 8b = paling ngebut, 300+ token/detik
+      messages: messages,
+      temperature: 0.6,
+      max_tokens: 512, // jangan kegedean biar cepet
+      stream: true
+    })
+  });
 
-  for (const MODEL of MODELS_TO_TRY) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await r.json();
-      
-      if (r.ok) return res.status(200).json(data);
-      
-      // kalau overload / not found, lanjut coba model berikutnya
-      if (data?.error?.message?.toLowerCase().includes('high demand') || 
-          data?.error?.message?.toLowerCase().includes('not found') ||
-          data?.error?.message?.toLowerCase().includes('no longer available')) {
-        console.log(`Model ${MODEL} gagal: ${data.error.message}, coba model lain...`);
-        continue;
-      }
-      
-      return res.status(r.status).json({ error: data?.error?.message });
-    } catch (e) {
-      continue;
-    }
+  // aktifin streaming ke frontend
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+
+  if (!groqRes.body) {
+    return res.status(500).end('Groq error');
   }
 
-  return res.status(503).json({ error: 'Semua model Gemini lagi rame banget, coba lagi 20 detik lagi.' });
-                                        }
+  const reader = groqRes.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    // chunk format: data: {"choices":[{"delta":{"content":"halo"}}]}
+    const lines = chunk.split('\n');
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const jsonStr = line.replace('data: ', '');
+        if (jsonStr === '[DONE]') break;
+        try {
+          const json = JSON.parse(jsonStr);
+          const text = json.choices?.[0]?.delta?.content || "";
+          if (text) res.write(text);
+        } catch {}
+      }
+    }
+  }
+  res.end();
+         }
