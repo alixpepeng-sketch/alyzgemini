@@ -5,17 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ALYZ AI — Gemini Console</title>
 <style>
-:root{ --ink:#0a0a0a; --paper:#f6f6f4; --line:#0a0a0a; --mute:#6b6b68; --ease:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1); }
+:root{--ink:#0a0a0a;--paper:#f6f6f4;--line:#0a0a0a;--mute:#6b6b68;--ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif; background:var(--paper); color:var(--ink); overflow:hidden; position:fixed; inset:0; width:100%; }
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;background:var(--paper);color:var(--ink);overflow:hidden;position:fixed;inset:0;width:100%;}
 button,textarea,input{font-family:inherit}
 .field{position:fixed;inset:0;z-index:-1;background-image:linear-gradient(var(--ink) 1px,transparent 1px),linear-gradient(90deg,var(--ink) 1px,transparent 1px);background-size:34px 34px;opacity:.045}
-.shell{ height:100vh; height:calc(var(--app-height, 100vh)); display:grid; grid-template-rows:auto auto 1fr auto; max-width:860px; margin:0 auto; padding:0 20px; overflow:hidden; }
+.shell{height:100vh;height:calc(var(--app-height,100vh));display:grid;grid-template-rows:auto auto 1fr auto;max-width:860px;margin:0 auto;padding:0 20px;overflow:hidden;}
 header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 18px;padding-top:calc(22px + env(safe-area-inset-top,0px))}
 .id{display:flex;align-items:center;gap:13px}
 .mark{width:40px;height:40px;border:2.5px solid var(--line);border-radius:11px;display:grid;place-items:center;background:var(--ink);box-shadow:4px 4px 0 var(--ink);flex-shrink:0;position:relative}
 .mark svg{width:20px;height:20px}
+.mark::after{content:"";position:absolute;inset:-2.5px;border-radius:13px;border:1px solid rgba(10,10,10,.15);animation:ring 2.6s var(--ease) infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.55);opacity:0}}
 .id-text{display:flex;flex-direction:column;line-height:1.15}
 .id-text b{font-size:17px;font-weight:900;letter-spacing:-.4px}
 .id-text span{font-size:10.5px;font-weight:700;letter-spacing:1.5px;color:var(--mute)}
@@ -32,14 +34,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:22p
 .drawer label{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--mute);margin-bottom:8px}
 .drawer textarea{width:100%;border:none;resize:none;outline:none;font-size:13.5px;font-weight:600;height:46px;background:transparent}
 .log{overflow-y:auto;overflow-x:hidden;padding:4px 0 18px;scroll-behavior:smooth;min-height:0}
-.welcome{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
+.welcome{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;opacity:0;animation:fadein.6s var(--ease).1s forwards}
+@keyframes fadein{to{opacity:1}}
 .welcome.big-mark{width:72px;height:72px;border:3px solid var(--line);border-radius:20px;display:grid;place-items:center;background:var(--ink);box-shadow:6px 6px 0 var(--ink)}
 .welcome.big-mark svg{width:34px;height:34px}
 .welcome h1{font-size:26px;font-weight:900;letter-spacing:-.8px;max-width:360px;line-height:1.2}
 .welcome p{font-size:13.5px;color:var(--mute);font-weight:600;max-width:320px;line-height:1.55}
 .chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
-.chip{border:2px solid var(--line);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:800;cursor:pointer;background:#fff;box-shadow:3px 3px 0 var(--ink)}
-.row{display:flex;margin-bottom:16px}
+.chip{border:2px solid var(--line);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:800;cursor:pointer;background:#fff;box-shadow:3px 3px 0 var(--ink);transition:transform.18s var(--spring),box-shadow.18s var(--spring)}
+.chip:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.row{display:flex;margin-bottom:16px;opacity:0;transform:translateY(10px);animation:msgin.4s var(--spring) forwards}
+@keyframes msgin{to{opacity:1;transform:none}}
 .row.user{justify-content:flex-end}
 .bubble{max-width:78%;padding:13px 16px;border:2px solid var(--line);font-size:14.5px;line-height:1.55;font-weight:600;white-space:pre-wrap;word-break:break-word}
 .row.user.bubble{background:var(--ink);color:#fff;border-radius:16px 16px 4px 16px;box-shadow:4px 4px 0 rgba(10,10,10,.18)}
@@ -50,12 +55,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:22p
 .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
 @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 .errorline{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.errorline b{background:var(--ink);color:#fff;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;flex-shrink:0;font-size:12px}
 .composer{padding:10px 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));flex-shrink:0}
-.bar{display:flex;align-items:flex-end;gap:10px;border:2.5px solid var(--line);border-radius:20px;padding:9px 9px 9px 18px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.bar{display:flex;align-items:flex-end;gap:10px;border:2.5px solid var(--line);border-radius:20px;padding:9px 9px 9px 18px;background:#fff;box-shadow:5px 5px 0 var(--ink);transition:box-shadow.2s var(--ease),transform.2s var(--ease)}
+.bar:focus-within{box-shadow:7px 7px 0 var(--ink);transform:translate(-2px,-2px)}
 .bar textarea{flex:1;border:none;outline:none;resize:none;max-height:140px;font-size:15px;font-weight:600;line-height:1.5;padding:9px 0;background:transparent}
-.send{width:42px;height:42px;border:none;border-radius:13px;background:var(--ink);color:#fff;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
-.send:disabled{opacity:.3}
+.bar textarea::placeholder{color:var(--mute);font-weight:600}
+.send{width:42px;height:42px;border:none;border-radius:13px;background:var(--ink);color:#fff;display:grid;place-items:center;cursor:pointer;flex-shrink:0;transition:transform.2s var(--spring),opacity.2s}
+.send:active{transform:scale(.88)}
+.send:disabled{opacity:.3;cursor:default}
+.send svg{width:18px;height:18px}
 .hint{text-align:center;font-size:10.5px;color:var(--mute);font-weight:700;letter-spacing:.3px;margin-top:10px}
+@media (max-width:480px){.shell{padding:0 14px}.bubble{max-width:86%}.welcome h1{font-size:22px}}
 </style>
 </head>
 <body>
@@ -68,109 +79,83 @@ header{display:flex;align-items:center;justify-content:space-between;padding:22p
     </div>
     <div class="hdr-right">
       <span class="beta"><i></i>LIVE</span>
-      <button class="icon-btn" id="btnSystem">S</button>
-      <button class="icon-btn" id="btnReset">↺</button>
+      <button class="icon-btn" id="btnSystem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1h.1a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
+      <button class="icon-btn" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 2.6 6.3M3 12V6m0 6h6"/></svg></button>
     </div>
   </header>
-  <div class="drawer" id="drawer"><div class="drawer-inner"><label>INSTRUKSI SISTEM</label><textarea id="systemPrompt" placeholder="Contoh: Act as a professional physicist"></textarea></div></div>
+  <div class="drawer" id="drawer"><div class="drawer-inner"><label>INSTRUKSI SISTEM — OPSIONAL</label><textarea id="systemPrompt" placeholder="Contoh: Act as a professional physicist"></textarea></div></div>
   <main class="log" id="log">
     <div class="welcome" id="welcome">
       <div class="big-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.3 6.4L21 12l-6.7 2.6L12 21l-2.3-6.4L3 12l6.7-2.6z"/></svg></div>
       <h1>Tanyakan apa saja</h1>
-      <p>Key disimpan di browser kamu, bukan di GitHub. Aman.</p>
+      <p>Percakapan ini berjalan lewat Gemini beta console. Atur instruksi sistem lewat ikon di pojok kanan atas bila perlu.</p>
       <div class="chips">
         <button class="chip" data-q="Jelaskan fisika kuantum secara sederhana">Fisika kuantum</button>
         <button class="chip" data-q="Buatkan rencana belajar 7 hari untuk pemula JavaScript">Rencana belajar JS</button>
+        <button class="chip" data-q="Apa perbedaan cuaca dan iklim?">Cuaca vs iklim</button>
       </div>
     </div>
   </main>
   <div class="composer">
-    <div class="bar"><textarea id="input" placeholder="Tulis pesan..." rows="1"></textarea><button class="send" id="btnSend" disabled>➤</button></div>
-    <p class="hint">ALYZ AI DAPAT MEMBUAT KESALAHAN</p>
+    <div class="bar"><textarea id="input" placeholder="Tulis pesan..." rows="1"></textarea><button class="send" id="btnSend" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></button></div>
+    <p class="hint">ALYZ AI DAPAT MEMBUAT KESALAHAN — PERIKSA INFORMASI PENTING</p>
   </div>
 </div>
 
 <script>
 (function () {
-  const $ = s => document.querySelector(s);
-  const log = $('#log'), welcome = $('#welcome'), input = $('#input'), sendBtn = $('#btnSend'), drawer = $('#drawer'), systemPrompt = $('#systemPrompt');
-
-  function getApiKey() {
-    // 1. Coba dari localStorage (hasil input user)
-    // 2. Coba dari config.js lama kalau masih ada (biar gak rusak di lokal)
-    return localStorage.getItem('GEMINI_API_KEY') || (window.ALYZ_AI_CONFIG && window.ALYZ_AI_CONFIG.GEMINI_API_KEY) || '';
+  // ini yang bikin keyboard gak nutupin layar - JANGAN DIHAPUS
+  function setAppHeight() {
+    const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  window.addEventListener('resize', setAppHeight);
+  window.addEventListener('orientationchange', setAppHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
   }
 
+  const $ = s => document.querySelector(s);
+  const log = $('#log'), welcome = $('#welcome'), input = $('#input'), sendBtn = $('#btnSend'), drawer = $('#drawer'), systemPrompt = $('#systemPrompt');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   $('#btnSystem').onclick = () => drawer.classList.toggle('open');
   $('#btnReset').onclick = () => { log.querySelectorAll('.row,.thinking,.errorline').forEach(el=>el.remove()); welcome.style.display='flex'; };
-  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { input.value = c.dataset.q; send(); });
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { input.value=c.dataset.q; autosize(); send(); });
 
-  input.addEventListener('input', () => {
-    input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px';
-    sendBtn.disabled=!input.value.trim();
-  });
-  input.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); }});
+  function autosize(){ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; sendBtn.disabled=!input.value.trim(); }
+  input.addEventListener('input', autosize);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); }});
+  input.addEventListener('focus', ()=>{ setTimeout(()=>{ setAppHeight(); log.scrollTop=log.scrollHeight; },250); });
 
-  function addRow(role,text){
-    welcome.style.display='none';
-    const row=document.createElement('div'); row.className='row '+role;
-    row.innerHTML=role==='ai'?`<div><div class="label">ALYZ AI</div><div class="bubble">${esc(text)}</div></div>`:`<div class="bubble">${esc(text)}</div>`;
-    log.appendChild(row); log.scrollTop=log.scrollHeight;
-  }
-  function addThinking(){
-    welcome.style.display='none';
-    const row=document.createElement('div'); row.className='row ai thinking';
-    row.innerHTML=`<div><div class="label">ALYZ AI</div><div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
-    log.appendChild(row); log.scrollTop=log.scrollHeight; return row;
-  }
-  function addError(text){
-    const el=document.createElement('div'); el.className='errorline'; el.innerHTML=`<b>!</b><span>${esc(text)}</span>`;
-    log.appendChild(el); log.scrollTop=log.scrollHeight;
-  }
+  function addRow(role,text){ welcome.style.display='none'; const row=document.createElement('div'); row.className='row '+role; row.innerHTML=role==='ai'?`<div><div class="label">ALYZ AI</div><div class="bubble">${esc(text)}</div></div>`:`<div class="bubble">${esc(text)}</div>`; log.appendChild(row); log.scrollTop=log.scrollHeight; }
+  function addThinking(){ welcome.style.display='none'; const row=document.createElement('div'); row.className='row ai thinking'; row.innerHTML=`<div><div class="label">ALYZ AI</div><div class="bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`; log.appendChild(row); log.scrollTop=log.scrollHeight; return row; }
+  function addError(text){ const el=document.createElement('div'); el.className='errorline'; el.innerHTML=`<b>!</b><span>${esc(text)}</span>`; log.appendChild(el); log.scrollTop=log.scrollHeight; }
 
   async function send(){
     const text=input.value.trim(); if(!text) return;
-    let API_KEY = getApiKey();
-
-    if(!API_KEY){
-      const k = prompt("Masukin API Key Gemini kamu (dari aistudio.google.com/apikey):");
-      if(!k) return;
-      localStorage.setItem('GEMINI_API_KEY', k.trim());
-      API_KEY = k.trim();
-    }
-
-    addRow('user', text); input.value=''; sendBtn.disabled=true; input.style.height='auto';
+    addRow('user', text); input.value=''; autosize();
     const thinkingRow=addThinking();
-
     try{
       const sys=systemPrompt.value.trim();
-      const body={ contents:[{ role:'user', parts:[{ text }] }] };
-      if(sys) body.systemInstruction={ parts:[{ text: sys }] };
-
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,{
-        method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(body)
+      // PANGGIL VERCEL VARIABLE LEWAT /api/chat
+      const res=await fetch('/api/chat', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ prompt:text, system:sys })
       });
       const data=await res.json();
       thinkingRow.remove();
-      if(!res.ok) throw new Error(data.error?.message || 'Gagal');
-
-      const reply=data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if(!reply) throw new Error('Respons kosong / diblokir filter');
+      if(!res.ok) throw new Error(data.error || 'Gagal');
+      const reply=data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.reply;
+      if(!reply) throw new Error('Respons kosong / diblokir');
       addRow('ai', reply);
-    }catch(err){
-      thinkingRow.remove();
-      if(err.message.includes('API_KEY_INVALID')) {
-        localStorage.removeItem('GEMINI_API_KEY');
-        addError('API Key salah / invalid. Coba masukin lagi.');
-      } else {
-        addError(err.message);
-      }
-    }
+    }catch(err){ thinkingRow.remove(); addError(err.message); console.error(err); }
   }
   $('#btnSend').onclick=send;
 })();
 </script>
 </body>
-  </html>
+</html>
